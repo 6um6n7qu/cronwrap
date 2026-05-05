@@ -18,4 +18,11 @@
 //		log.Println("unknown job")
 //	}
 //	fmt.Printf("success rate: %d/%d\n", stats.Successes, stats.Successes+stats.Failures)
+//
+// Load previously persisted metrics from disk:
+//
+//	m := metrics.New("/var/lib/cronwrap/metrics.json")
+//	if err := m.ReadJSON(); err != nil {
+//		log.Printf("could not load metrics: %v", err)
+//	}
 package metrics
