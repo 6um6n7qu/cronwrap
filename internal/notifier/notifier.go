@@ -54,6 +54,12 @@ func (n *Notifier) Notify(alert Alert) error {
 	if len(n.cfg.To) == 0 {
 		return fmt.Errorf("notifier: no recipients configured")
 	}
+	if n.cfg.SMTPHost == "" {
+		return fmt.Errorf("notifier: SMTP host is not configured")
+	}
+	if n.cfg.From == "" {
+		return fmt.Errorf("notifier: sender address is not configured")
+	}
 
 	var buf bytes.Buffer
 	buf.WriteString(fmt.Sprintf("From: %s\r\n", n.cfg.From))
@@ -76,5 +82,8 @@ func (n *Notifier) Notify(alert Alert) error {
 	}
 
 	addr := fmt.Sprintf("%s:%d", n.cfg.SMTPHost, n.cfg.SMTPPort)
-	return n.send(addr, nil, n.cfg.From, n.cfg.To, buf.Bytes())
+	if err := n.send(addr, nil, n.cfg.From, n.cfg.To, buf.Bytes()); err != nil {
+		return fmt.Errorf("notifier: failed to send alert for job %q: %w", alert.JobName, err)
+	}
+	return nil
 }
