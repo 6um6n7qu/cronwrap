@@ -25,4 +25,13 @@
 //	if err := m.ReadJSON(); err != nil {
 //		log.Printf("could not load metrics: %v", err)
 //	}
+//
+// A typical workflow combining load, record, and persist:
+//
+//	m := metrics.New("/var/lib/cronwrap/metrics.json")
+//	_ = m.ReadJSON() // ignore error if file does not yet exist
+//	m.Record("backup-job", success, duration)
+//	if err := m.WriteJSON(); err != nil {
+//		log.Printf("could not save metrics: %v", err)
+//	}
 package metrics
