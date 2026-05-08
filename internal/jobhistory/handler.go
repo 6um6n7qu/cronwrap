@@ -10,34 +10,37 @@ import (
 //
 // Routes:
 //
-//	GET /jobhistory          — returns all entries
-//	GET /jobhistory/{name}   — returns entries for a specific job
-func Handler(s *Store) http.HandlerFunc {
+//	GET /jobhistory        → all recorded entries (newest first)
+//	GET /jobhistory/{name} → entries for a single named job
+func Handler(h *History) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
 
-		// Trim leading slash and the "jobhistory" prefix to extract optional name.
+		w.Header().Set("Content-Type", "application/json")
+
+		// Trim leading slash and optional prefix so both
+		// "/jobhistory" and "/jobhistory/my-job" work.
 		path := strings.TrimPrefix(r.URL.Path, "/")
 		parts := strings.SplitN(path, "/", 2)
 
-		var entries []Entry
 		if len(parts) == 2 && parts[1] != "" {
 			name := parts[1]
-			entries = s.ForJob(name)
-			if len(entries) == 0 {
-				http.Error(w, "not found", http.StatusNotFound)
+			entries, ok := h.Get(name)
+			if !ok {
+				http.Error(w, "job not found", http.StatusNotFound)
 				return
 			}
-		} else {
-			entries = s.All()
+			json.NewEncoder(w).Encode(entries)
+			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		if err := json.NewEncoder(w).Encode(entries); err != nil {
-			http.Error(w, "encoding error", http.StatusInternalServerError)
+		all := h.All()
+		if all == nil {
+			all = []Entry{}
 		}
+		json.NewEncoder(w).Encode(all)
 	}
 }
